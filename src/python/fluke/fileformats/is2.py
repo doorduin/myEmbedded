@@ -25,7 +25,8 @@ http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html
 '''
 #From Standard Python
 import logging
-import Image			#For Image Maniulation
+from PIL import Image
+_imaging = Image.core
 import struct
 
 #From myEmbeddedOSpythonLibs
@@ -258,7 +259,7 @@ class is2(object):
 			for j in range(0, self.__xImage1_size__):
 				res = self.readUnpack(2,"H")
 				row.insert(0, res)
-				rowText += "%02X"%((res/0x100)&0xFF)
+				rowText += "%02X"%(int((res/0x100))&0xFF)
 			logging.debug(rowText)
 			self.Image1_data.append(row)
 
@@ -334,7 +335,7 @@ class is2(object):
 			for j in range(0, self.__xImage2_size__):
 				res = self.readUnpack(2,"H")
 				row.insert(0,res)
-				rowText += "%02X"%((res/0x100)&0xFF)
+				rowText += "%02X"%(int(res/0x100)&0xFF)
 			logging.debug(rowText)
 			self.Image2_data.append(row)
 
@@ -436,8 +437,8 @@ class is2(object):
 		for y in theImageData:
 			imageDataRow = [] 
 			for x in y:
-				r = (x/0x800)&0x01F
-				g = (x/0x20)&0x03F
+				r = int(x/0x800)&0x01F
+				g = int(x/0x20)&0x03F
 				b = (x&0x01F)
 				r_s = int(r*1.0/(0x1F)*0xFF)
 				g_s = int(g*1.0/(0x3F)*0xFF)
@@ -475,9 +476,13 @@ class is2(object):
 			im = Image.new("L", (xSize, ySize))
 		else:
 			im = Image.new("RGB", (xSize, ySize))
+
 		for y in range(0, ySize):
 			for x in range(0,xSize):
-				im.putpixel((x,y), data[x][y])
+				value = data[x][y]
+				#print ("Data=",value)
+				im.putpixel((x,y), value)
+				
 		
 		#Check if resizeing is required
 		if xSize == xTargetSize:
@@ -554,7 +559,7 @@ if __name__ == '__main__':
 		#logging.debug("ImageData: %s", str(imageData))
 		xTargetSize = 105*4
 		yTargetSize = 105*4
-		IRim = data.DataToPIL(IRdata,(xTargetSize,yTargetSize))
+		#IRim = data.DataToPIL(IRdata,(xTargetSize,yTargetSize))
 		#IRim.show()
 		V1im = data.DataToPIL(Image1Data,(xTargetSize,yTargetSize))
 		#V1im.show()
@@ -569,12 +574,12 @@ if __name__ == '__main__':
 		Image2Data = data.PILtoData(V2im)
 		#Image2Data = data.PILtoData(V1im.convert("P"))#,palette=Image.ADAPTIVE))
 
-		print "Center Temp %3.3f\xF8C"%data.cTemperature
-		print "Average Center Temp %3.3f\xF8C"%data.cAverage
-		print "Corrected Average Center Temp %3.3f\xF8C"%data.cCorrectedAverage
-		print "RAW Center Average %3.3f / 0x%04X"%(data.tbAverage, int(data.tbAverage))
-		print "Max Temp: %3.3f"%data.tMax
-		print "Min Temp: %3.3f"%data.tMin
+		print("Center Temp %3.3f oC"%data.cTemperature)
+		print("Average Center Temp %3.3f oC"%data.cAverage)
+		print("Corrected Average Center Temp %3.3f oC"%data.cCorrectedAverage)
+		print("RAW Center Average %3.3f / 0x%04X"%(data.tbAverage, int(data.tbAverage)))
+		print("Max Temp: %3.3f"%data.tMax)
+		print("Min Temp: %3.3f"%data.tMin)
 			
 		#2D plot Simple
 		if (False):
